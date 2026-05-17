@@ -5,11 +5,11 @@ const timeNode = document.querySelector("#time");
 const startBtn = document.querySelector("#startBtn");
 
 const items = [
-  { label: "rice", color: "#fff7d6", points: 8 },
-  { label: "pepper", color: "#ef4444", points: 10 },
-  { label: "tomato", color: "#f97316", points: 12 },
-  { label: "chicken", color: "#facc15", points: 18 },
-  { label: "burnt", color: "#1f2937", points: -20 }
+  { label: "rice", points: 8 },
+  { label: "pepper", points: 10 },
+  { label: "tomato", points: 12 },
+  { label: "chicken", points: 18 },
+  { label: "burnt", points: -20 }
 ];
 
 let player = { x: canvas.width / 2 - 55, y: canvas.height - 58, width: 110, height: 28, speed: 22 };
@@ -18,15 +18,34 @@ let score = 0;
 let time = 45;
 let running = false;
 let frame = 0;
+let timerId = null;
+let animationId = null;
 
 function drawPlayer() {
+  ctx.save();
+  ctx.shadowColor = "rgba(15, 118, 110, 0.28)";
+  ctx.shadowBlur = 14;
+  ctx.shadowOffsetY = 8;
   ctx.fillStyle = "#0f766e";
   ctx.beginPath();
   roundRect(player.x, player.y, player.width, player.height, 14);
   ctx.fill();
-  ctx.fillStyle = "white";
-  ctx.font = "700 16px Arial";
-  ctx.fillText("bowl", player.x + 38, player.y + 19);
+  ctx.shadowColor = "transparent";
+  ctx.fillStyle = "#d1fae5";
+  ctx.beginPath();
+  ctx.ellipse(player.x + player.width / 2, player.y + 2, player.width / 2 - 8, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#fff7ed";
+  ctx.beginPath();
+  ctx.ellipse(player.x + player.width / 2, player.y - 1, player.width / 2 - 18, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#f97316";
+  ctx.beginPath();
+  ctx.arc(player.x + 44, player.y - 4, 4, 0, Math.PI * 2);
+  ctx.arc(player.x + 58, player.y - 5, 4, 0, Math.PI * 2);
+  ctx.arc(player.x + 72, player.y - 4, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
 }
 
 function roundRect(x, y, width, height, radius) {
@@ -43,19 +62,136 @@ function roundRect(x, y, width, height, radius) {
 
 function spawnItem() {
   const item = items[Math.floor(Math.random() * items.length)];
-  falling.push({ ...item, x: Math.random() * (canvas.width - 32), y: -30, size: 28, vy: 2.4 + Math.random() * 2.6 });
+  falling.push({ ...item, x: Math.random() * (canvas.width - 44) + 22, y: -34, size: 34, vy: 2.4 + Math.random() * 2.6 });
 }
 
 function drawItem(item) {
-  ctx.fillStyle = item.color;
+  ctx.save();
+  ctx.translate(item.x, item.y);
+  ctx.shadowColor = "rgba(32, 17, 12, 0.2)";
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetY = 6;
+  if (item.label === "rice") drawRiceIcon(item.size);
+  if (item.label === "pepper") drawPepperIcon(item.size);
+  if (item.label === "tomato") drawTomatoIcon(item.size);
+  if (item.label === "chicken") drawChickenIcon(item.size);
+  if (item.label === "burnt") drawBurntPotIcon(item.size);
+  ctx.restore();
+}
+
+function drawRiceIcon(size) {
+  const s = size / 34;
+  ctx.fillStyle = "#fff7d6";
   ctx.beginPath();
-  ctx.arc(item.x, item.y, item.size / 2, 0, Math.PI * 2);
+  roundRect(-13 * s, -14 * s, 26 * s, 28 * s, 6 * s);
   ctx.fill();
-  ctx.fillStyle = item.label === "burnt" ? "white" : "#1f130f";
-  ctx.font = "700 10px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText(item.label.slice(0, 5), item.x, item.y + 4);
-  ctx.textAlign = "left";
+  ctx.strokeStyle = "#d6b56d";
+  ctx.lineWidth = 2 * s;
+  ctx.stroke();
+  ctx.shadowColor = "transparent";
+  ctx.fillStyle = "#f59e0b";
+  ctx.fillRect(-11 * s, -6 * s, 22 * s, 5 * s);
+  ctx.strokeStyle = "#d6b56d";
+  ctx.lineWidth = 1.4 * s;
+  for (let i = -7; i <= 7; i += 7) {
+    ctx.beginPath();
+    ctx.ellipse(i * s, 7 * s, 2 * s, 4 * s, 0.7, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function drawPepperIcon(size) {
+  const s = size / 34;
+  ctx.fillStyle = "#dc2626";
+  ctx.beginPath();
+  ctx.moveTo(-5 * s, -13 * s);
+  ctx.bezierCurveTo(-18 * s, -6 * s, -11 * s, 14 * s, 1 * s, 15 * s);
+  ctx.bezierCurveTo(15 * s, 12 * s, 15 * s, -7 * s, -2 * s, -13 * s);
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+  ctx.fillStyle = "#16a34a";
+  ctx.beginPath();
+  ctx.moveTo(-2 * s, -13 * s);
+  ctx.quadraticCurveTo(3 * s, -22 * s, 9 * s, -15 * s);
+  ctx.lineTo(4 * s, -11 * s);
+  ctx.fill();
+  ctx.fillStyle = "rgba(255,255,255,0.42)";
+  ctx.beginPath();
+  ctx.ellipse(-6 * s, -5 * s, 3 * s, 7 * s, 0.4, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawTomatoIcon(size) {
+  const s = size / 34;
+  ctx.fillStyle = "#f97316";
+  ctx.beginPath();
+  ctx.arc(0, 2 * s, 15 * s, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+  ctx.fillStyle = "#16a34a";
+  for (let i = 0; i < 5; i += 1) {
+    ctx.save();
+    ctx.rotate((Math.PI * 2 * i) / 5);
+    ctx.beginPath();
+    ctx.moveTo(0, -16 * s);
+    ctx.lineTo(4 * s, -5 * s);
+    ctx.lineTo(-4 * s, -5 * s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  ctx.fillStyle = "rgba(255,255,255,0.35)";
+  ctx.beginPath();
+  ctx.arc(-6 * s, -3 * s, 4 * s, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawChickenIcon(size) {
+  const s = size / 34;
+  ctx.fillStyle = "#f59e0b";
+  ctx.beginPath();
+  ctx.ellipse(-1 * s, 2 * s, 13 * s, 16 * s, -0.55, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#fff7ed";
+  ctx.beginPath();
+  ctx.arc(11 * s, -10 * s, 5 * s, 0, Math.PI * 2);
+  ctx.arc(17 * s, -14 * s, 4 * s, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+  ctx.strokeStyle = "#b45309";
+  ctx.lineWidth = 2 * s;
+  ctx.beginPath();
+  ctx.arc(-4 * s, 0, 8 * s, 0.4, 2.5);
+  ctx.stroke();
+}
+
+function drawBurntPotIcon(size) {
+  const s = size / 34;
+  ctx.fillStyle = "#1f2937";
+  ctx.beginPath();
+  roundRect(-15 * s, -8 * s, 30 * s, 22 * s, 5 * s);
+  ctx.fill();
+  ctx.strokeStyle = "#0f172a";
+  ctx.lineWidth = 3 * s;
+  ctx.stroke();
+  ctx.shadowColor = "transparent";
+  ctx.strokeStyle = "#475569";
+  ctx.lineWidth = 2 * s;
+  ctx.beginPath();
+  ctx.moveTo(-20 * s, -3 * s);
+  ctx.lineTo(-14 * s, 0);
+  ctx.moveTo(20 * s, -3 * s);
+  ctx.lineTo(14 * s, 0);
+  ctx.stroke();
+  ctx.strokeStyle = "#111827";
+  ctx.beginPath();
+  ctx.arc(0, -9 * s, 11 * s, Math.PI, 0);
+  ctx.stroke();
+  ctx.fillStyle = "#ef4444";
+  ctx.beginPath();
+  ctx.arc(-6 * s, 4 * s, 2 * s, 0, Math.PI * 2);
+  ctx.arc(6 * s, 4 * s, 2 * s, 0, Math.PI * 2);
+  ctx.fill();
 }
 
 function collision(item) {
@@ -84,10 +220,12 @@ function loop() {
   });
 
   frame += 1;
-  if (running) requestAnimationFrame(loop);
+  if (running) animationId = requestAnimationFrame(loop);
 }
 
 function startGame() {
+  if (timerId) clearInterval(timerId);
+  if (animationId) cancelAnimationFrame(animationId);
   falling = [];
   score = 0;
   time = 45;
@@ -96,16 +234,16 @@ function startGame() {
   scoreNode.textContent = score;
   timeNode.textContent = time;
   startBtn.textContent = "Restart";
-  const timer = setInterval(() => {
+  timerId = setInterval(() => {
     if (!running) {
-      clearInterval(timer);
+      clearInterval(timerId);
       return;
     }
     time -= 1;
     timeNode.textContent = time;
     if (time <= 0) {
       running = false;
-      clearInterval(timer);
+      clearInterval(timerId);
       ctx.fillStyle = "rgba(32, 17, 12, 0.82)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = "white";
