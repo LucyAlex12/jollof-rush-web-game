@@ -26,7 +26,7 @@ body {
   align-items: center;
   display: grid;
   gap: 12px;
-  grid-template-columns: 1fr 120px 120px auto;
+  grid-template-columns: 1fr 120px 120px auto auto;
   margin-bottom: 14px;
 }
 
@@ -76,6 +76,31 @@ button {
   font: inherit;
   font-weight: 900;
   padding: 13px 18px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+#pauseBtn {
+  background: #0f766e;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 14px;
+}
+
+.legend span {
+  background: white;
+  border: 1px solid rgba(32, 17, 12, 0.08);
+  border-radius: 999px;
+  box-shadow: 0 10px 24px rgba(32, 17, 12, 0.08);
+  font-weight: 900;
+  padding: 9px 12px;
 }
 
 canvas {

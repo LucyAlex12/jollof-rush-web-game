@@ -3,13 +3,14 @@ const ctx = canvas.getContext("2d");
 const scoreNode = document.querySelector("#score");
 const timeNode = document.querySelector("#time");
 const startBtn = document.querySelector("#startBtn");
+const pauseBtn = document.querySelector("#pauseBtn");
 
 const items = [
-  { label: "rice", points: 8 },
-  { label: "pepper", points: 10 },
-  { label: "tomato", points: 12 },
-  { label: "chicken", points: 18 },
-  { label: "burnt", points: -20 }
+  { label: "rice", icon: "🍚", points: 8 },
+  { label: "pepper", icon: "🌶️", points: 10 },
+  { label: "tomato", icon: "🍅", points: 12 },
+  { label: "chicken", icon: "🍗", points: 18 },
+  { label: "burnt pot", icon: "🔥", points: -20 }
 ];
 
 let player = { x: canvas.width / 2 - 55, y: canvas.height - 58, width: 110, height: 28, speed: 22 };
@@ -17,6 +18,7 @@ let falling = [];
 let score = 0;
 let time = 45;
 let running = false;
+let paused = false;
 let frame = 0;
 let timerId = null;
 let animationId = null;
@@ -62,7 +64,7 @@ function roundRect(x, y, width, height, radius) {
 
 function spawnItem() {
   const item = items[Math.floor(Math.random() * items.length)];
-  falling.push({ ...item, x: Math.random() * (canvas.width - 44) + 22, y: -34, size: 34, vy: 2.4 + Math.random() * 2.6 });
+  falling.push({ ...item, x: Math.random() * (canvas.width - 58) + 29, y: -46, size: 46, vy: 2.4 + Math.random() * 2.6 });
 }
 
 function drawItem(item) {
@@ -71,11 +73,15 @@ function drawItem(item) {
   ctx.shadowColor = "rgba(32, 17, 12, 0.2)";
   ctx.shadowBlur = 10;
   ctx.shadowOffsetY = 6;
-  if (item.label === "rice") drawRiceIcon(item.size);
-  if (item.label === "pepper") drawPepperIcon(item.size);
-  if (item.label === "tomato") drawTomatoIcon(item.size);
-  if (item.label === "chicken") drawChickenIcon(item.size);
-  if (item.label === "burnt") drawBurntPotIcon(item.size);
+  ctx.fillStyle = item.points < 0 ? "rgba(31, 41, 55, 0.9)" : "rgba(255, 255, 255, 0.86)";
+  ctx.beginPath();
+  ctx.arc(0, 0, item.size * 0.62, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+  ctx.font = `${item.size}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(item.icon, 0, 1);
   ctx.restore();
 }
 
@@ -204,23 +210,39 @@ function loop() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   drawPlayer();
 
-  if (running && frame % 34 === 0) spawnItem();
+  if (running && !paused && frame % 34 === 0) spawnItem();
   falling.forEach(item => {
-    item.y += item.vy;
+    if (!paused) item.y += item.vy;
     drawItem(item);
   });
 
-  falling = falling.filter(item => {
-    if (collision(item)) {
-      score = Math.max(0, score + item.points);
-      scoreNode.textContent = score;
-      return false;
-    }
-    return item.y < canvas.height + 40;
-  });
+  if (!paused) {
+    falling = falling.filter(item => {
+      if (collision(item)) {
+        score = Math.max(0, score + item.points);
+        scoreNode.textContent = score;
+        return false;
+      }
+      return item.y < canvas.height + 50;
+    });
+  } else {
+    drawPauseOverlay();
+  }
 
-  frame += 1;
+  if (!paused) frame += 1;
   if (running) animationId = requestAnimationFrame(loop);
+}
+
+function drawPauseOverlay() {
+  ctx.fillStyle = "rgba(32, 17, 12, 0.55)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "white";
+  ctx.font = "800 44px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("Paused", canvas.width / 2, canvas.height / 2);
+  ctx.font = "700 18px Arial";
+  ctx.fillText("Tap Resume to continue cooking.", canvas.width / 2, canvas.height / 2 + 34);
+  ctx.textAlign = "left";
 }
 
 function startGame() {
@@ -231,18 +253,23 @@ function startGame() {
   time = 45;
   frame = 0;
   running = true;
+  paused = false;
   scoreNode.textContent = score;
   timeNode.textContent = time;
   startBtn.textContent = "Restart";
+  pauseBtn.disabled = false;
+  pauseBtn.textContent = "Pause";
   timerId = setInterval(() => {
     if (!running) {
       clearInterval(timerId);
       return;
     }
+    if (paused) return;
     time -= 1;
     timeNode.textContent = time;
     if (time <= 0) {
       running = false;
+      pauseBtn.disabled = true;
       clearInterval(timerId);
       ctx.fillStyle = "rgba(32, 17, 12, 0.82)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -274,4 +301,10 @@ document.addEventListener("keydown", event => {
 });
 
 startBtn.addEventListener("click", startGame);
+pauseBtn.addEventListener("click", () => {
+  if (!running) return;
+  paused = !paused;
+  pauseBtn.textContent = paused ? "Resume" : "Pause";
+  if (!paused && !animationId) loop();
+});
 loop();
