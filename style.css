@@ -12,14 +12,47 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: Inter, "Segoe UI", Arial, sans-serif;
-  background: radial-gradient(circle at top left, rgba(249, 115, 22, 0.24), transparent 26rem), #fff7ed;
+  background:
+    radial-gradient(ellipse 32rem 24rem at var(--cursor-x, 18%) var(--cursor-y, 18%), rgba(220, 38, 38, 0.24), transparent 72%),
+    radial-gradient(ellipse 28rem 24rem at 82% 16%, rgba(249, 115, 22, 0.26), transparent 70%),
+    linear-gradient(135deg, #fff7ed, #ffedd5 48%, #fef3c7);
   color: var(--ink);
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  animation: kitchenHeat 10s ease-in-out infinite alternate;
+  background:
+    radial-gradient(ellipse 8rem 18rem at 18% 90%, rgba(249, 115, 22, 0.18), transparent 70%),
+    radial-gradient(ellipse 8rem 20rem at 42% 96%, rgba(220, 38, 38, 0.14), transparent 70%),
+    radial-gradient(ellipse 8rem 18rem at 74% 92%, rgba(245, 158, 11, 0.18), transparent 70%);
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
+}
+
+body::after {
+  background-image:
+    linear-gradient(rgba(32,17,12,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(32,17,12,0.035) 1px, transparent 1px);
+  background-size: 62px 62px;
+  content: "";
+  inset: 0;
+  mask-image: radial-gradient(ellipse 82% 70% at 50% 34%, black 12%, transparent 86%);
+  pointer-events: none;
+  position: fixed;
+  z-index: 0;
 }
 
 .game-shell {
   width: min(980px, calc(100% - 32px));
   margin: 0 auto;
   padding: 28px 0;
+  position: relative;
+  z-index: 1;
 }
 
 .hud {
@@ -53,7 +86,8 @@ canvas {
 }
 
 .hud article {
-  background: white;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(16px);
   padding: 13px;
 }
 
@@ -95,9 +129,10 @@ button:disabled {
 }
 
 .legend span {
-  background: white;
+  background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(32, 17, 12, 0.08);
   border-radius: 999px;
+  backdrop-filter: blur(16px);
   box-shadow: 0 10px 24px rgba(32, 17, 12, 0.08);
   font-weight: 900;
   padding: 9px 12px;
@@ -105,8 +140,14 @@ button:disabled {
 
 canvas {
   background: linear-gradient(180deg, #fff3d0, #fed7aa);
+  border: 1px solid rgba(32, 17, 12, 0.12);
   display: block;
   width: 100%;
+}
+
+@keyframes kitchenHeat {
+  from { transform: translateY(0) scale(1); filter: blur(0); }
+  to { transform: translateY(-18px) scale(1.05); filter: blur(2px); }
 }
 
 .hint {
